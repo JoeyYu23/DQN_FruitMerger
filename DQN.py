@@ -43,9 +43,17 @@ class ReplayMemory(collections.deque):
         mini_batch = random.sample(self, batch_size)
 
         # feature_batch, action_batch, reward_batch, next_feature_batch, alive_batch = experiences
-        experiences = list(zip(*mini_batch))
+        features, actions, rewards, next_features, alives = zip(*mini_batch)
 
-        return tuple([np.array(exp) for exp in experiences])
+        # 确保正确堆叠数组
+        feature_batch = np.stack(features)
+        # action可能是数组或标量，统一处理
+        action_batch = np.array([a if np.isscalar(a) else a.item() for a in actions])
+        reward_batch = np.array(rewards, dtype=np.float32)
+        next_feature_batch = np.stack(next_features)
+        alive_batch = np.array(alives, dtype=np.float32)
+
+        return feature_batch, action_batch, reward_batch, next_feature_batch, alive_batch
 
 
 def build_model(input_size: int, output_size: int) -> nn.Layer:

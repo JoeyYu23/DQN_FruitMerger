@@ -131,3 +131,15 @@ dmypy.json
 screenshots/
 weights/
 *.pdparams
+
+# Temporary output files
+output/
+training.log
+evaluation_results.txt
+
+# Generated visualization images
+high_score_step_*.png
+feature.png
+screen.png
+screen_ai.png
+screenshot.png
