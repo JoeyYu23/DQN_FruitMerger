@@ -143,3 +143,10 @@ feature.png
 screen.png
 screen_ai.png
 screenshot.png
+
+# macOS system files
+.DS_Store
+*.DS_Store
+
+# Temporary files
+CLAUDE.md
