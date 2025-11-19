@@ -1,0 +1,267 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\title{Fruit Merger Game: Mechanics and Implementation}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+The Fruit Merger game is a physics-based puzzle game where players drop fruits into a container to merge identical fruits and achieve high scores. The game employs dynamic difficulty adjustment and physics simulation to create an engaging reinforcement learning environment.
+
+\section{Game Overview}
+
+\subsection{Game Dimensions and Configuration}
+
+The game operates on a fixed-size canvas with the following specifications:
+
+\begin{itemize}
+    \item \textbf{Resolution:} $300 \times 400$ pixels (width $\times$ height)
+    \item \textbf{Gravity:} $(0, 800)$ pixels/s$^2$ in the downward direction
+    \item \textbf{Physics Engine:} Pymunk (2D rigid body physics)
+    \item \textbf{Fruit Types:} 11 distinct levels (indexed 1-11)
+\end{itemize}
+
+\subsection{Fruit Properties}
+
+Each fruit type is characterized by its radius, which increases with the fruit level. The radii are defined as:
+
+\begin{equation}
+r_i = 1.2 \times 1.3 \times r_{\text{base},i}, \quad i \in \{1, 2, \ldots, 11\}
+\end{equation}
+
+where $r_{\text{base}} = [-1, 10, 15, 21, 23, 29, 35, 37, 50, 59, 60, 78]$ pixels. Note that index 0 is a placeholder and not used in gameplay.
+
+The scaling factor of $1.2 \times 1.3 = 1.56$ ensures appropriate visual sizing relative to the game container.
+
+\section{Fruit Generation Mechanism}
+
+\subsection{Random Fruit Type Generation}
+
+The core fruit generation algorithm implements an adaptive difficulty system. The function responsible for generating new fruits is defined as:
+
+\begin{algorithm}[H]
+\caption{Create Random Fruit Type}
+\begin{algorithmic}[1]
+\STATE \textbf{Input:} $\texttt{largest\_fruit\_type}$ (maximum fruit type achieved so far)
+\STATE \textbf{Output:} $\texttt{fruit\_type}$ (randomly selected fruit type)
+\STATE $\texttt{max\_type} \gets \min(\texttt{largest\_fruit\_type}, 5)$
+\STATE $\texttt{fruit\_type} \gets \texttt{PRNG.randint}(1, \texttt{max\_type})$
+\RETURN $\texttt{fruit\_type}$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Adaptive Difficulty System}
+
+The generation mechanism incorporates dynamic difficulty adjustment through the following rules:
+
+\begin{enumerate}
+    \item \textbf{Initial State:} At game start, $\texttt{largest\_fruit\_type} = 1$, thus only type-1 fruits (smallest) can spawn.
+
+    \item \textbf{Progressive Unlocking:} As players merge fruits and create higher-level fruits, the range of spawnable fruits expands:
+    \begin{equation}
+    \texttt{spawn\_range} = [1, \min(\texttt{largest\_fruit\_type}, 5)]
+    \end{equation}
+
+    \item \textbf{Upper Bound:} The maximum spawnable fruit type is capped at level 5, regardless of player progress. This prevents the game from becoming trivially easy even when high-level fruits have been achieved.
+\end{enumerate}
+
+\subsection{Pseudorandom Number Generation}
+
+The game employs a custom Pseudorandom Number Generator (PRNG) to ensure:
+
+\begin{itemize}
+    \item \textbf{Reproducibility:} Given the same seed, the exact sequence of fruits is guaranteed
+    \item \textbf{Deterministic Training:} Essential for reinforcement learning algorithm evaluation
+    \item \textbf{Fair Comparison:} Different agents can be tested on identical fruit sequences
+\end{itemize}
+
+The PRNG can be seeded explicitly via:
+\begin{verbatim}
+self.prng.seed(seed=seed_value)
+\end{verbatim}
+
+\section{Fruit Merging Mechanics}
+
+\subsection{Collision Detection and Merging}
+
+When two fruits of the same type collide, they merge into a single fruit of the next higher type. This is implemented through collision handlers in the physics engine:
+
+\begin{algorithm}[H]
+\caption{Collision Post-Solve Handler}
+\begin{algorithmic}[1]
+\STATE \textbf{Input:} Two colliding shapes $s_0, s_1$ with positions $(x_1, y_1), (x_2, y_2)$
+\REQUIRE $s_0.\texttt{collision\_type} = s_1.\texttt{collision\_type} = t$
+\STATE $\texttt{new\_type} \gets t + 1$
+\STATE $(x, y) \gets \begin{cases}
+(x_1, y_1) & \text{if } y_1 > y_2 \\
+(x_2, y_2) & \text{otherwise}
+\end{cases}$
+\STATE Remove $s_0$ and $s_1$ from physics space
+\STATE Create new fruit at position $(x, y)$ with type $\texttt{new\_type}$
+\STATE $\texttt{largest\_fruit\_type} \gets \max(\texttt{largest\_fruit\_type}, \texttt{new\_type})$
+\STATE Update score (see Section \ref{sec:scoring})
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Merge Position Selection}
+
+The new merged fruit is created at the position of the \textbf{lower} fruit (larger $y$-coordinate) to maintain realistic physics behavior and prevent fruits from floating upward unnaturally.
+
+\section{Scoring System}
+\label{sec:scoring}
+
+The scoring mechanism rewards players for creating higher-level fruits:
+
+\begin{equation}
+\Delta \texttt{score} = \begin{cases}
+t & \text{if } t < 11 \\
+100 & \text{if } t = 11
+\end{cases}
+\end{equation}
+
+where $t$ is the type of the newly created fruit. This creates a strong incentive to merge fruits into the highest possible levels, with a significant bonus for achieving the maximum fruit type (level 11).
+
+The cumulative score is:
+\begin{equation}
+\texttt{score}_{t+1} = \texttt{score}_t + \Delta \texttt{score}
+\end{equation}
+
+\section{Game State and Termination}
+
+\subsection{Stability Detection}
+
+The game maintains a stability tracking system to determine when fruits have settled:
+
+\begin{itemize}
+    \item \textbf{Stability Threshold:} Maximum vertical velocity of all fruits $< 20$ pixels/s
+    \item \textbf{Stable Frame Threshold:} 10 consecutive frames of low velocity
+    \item \textbf{Clickability:} Player can only drop a new fruit when the system is stable
+\end{itemize}
+
+\subsection{Failure Condition}
+
+The game terminates when any fruit crosses above the red line boundary after the system has stabilized:
+
+\begin{equation}
+\texttt{alive} = \begin{cases}
+\texttt{False} & \text{if } \exists f \in \texttt{fruits}: f.y < y_{\texttt{init}} \text{ and system is stable} \\
+\texttt{True} & \text{otherwise}
+\end{cases}
+\end{equation}
+
+where $y_{\texttt{init}} = 0.15 \times \texttt{height} = 60$ pixels is the drop line position.
+
+\section{State Representation for Reinforcement Learning}
+
+\subsection{Feature Extraction}
+
+For DQN training, the game state is converted into a grid-based feature representation:
+
+\begin{equation}
+\texttt{features} \in \mathbb{R}^{H \times W \times 2}
+\end{equation}
+
+where:
+\begin{itemize}
+    \item $H$ = grid height (number of vertical cells)
+    \item $W$ = grid width (number of horizontal cells)
+    \item Channel 0: Encodes fruits smaller than or equal to current fruit
+    \item Channel 1: Encodes fruits larger than current fruit
+\end{itemize}
+
+\subsection{Feature Encoding}
+
+For each grid cell $(i, j)$, the feature values are computed as:
+
+\begin{equation}
+\texttt{features}[i, j, 0] = \begin{cases}
+0 & \text{if cell is empty} \\
+1 & \text{if nearest fruit type } = \texttt{current\_fruit\_type} \\
+\min(0, f_t - \texttt{current\_fruit\_type}) & \text{if nearest fruit type } = f_t
+\end{cases}
+\end{equation}
+
+\begin{equation}
+\texttt{features}[i, j, 1] = \begin{cases}
+0 & \text{if cell is empty} \\
+1 & \text{if nearest fruit type } = \texttt{current\_fruit\_type} \\
+\min(0, \texttt{current\_fruit\_type} - f_t) & \text{if nearest fruit type } = f_t
+\end{cases}
+\end{equation}
+
+This dual-channel representation allows the neural network to distinguish between potentially mergeable fruits (same type) and obstacles (different types).
+
+\section{Physics Parameters}
+
+The physical properties of fruits and container boundaries are:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|}
+\hline
+\textbf{Property} & \textbf{Value} \\
+\hline
+Fruit Elasticity & 0.3 \\
+Fruit Friction & 0.6 \\
+Wall Friction & 0.6 \\
+Wall Thickness & 20 pixels \\
+Fruit Mass & $(r / 10)^2$ (radius-dependent) \\
+\hline
+\end{tabular}
+\caption{Physics simulation parameters}
+\end{table}
+
+\section{Implementation Details}
+
+\subsection{Thread Safety}
+
+The implementation uses two lock mechanisms:
+\begin{itemize}
+    \item \texttt{lock}: Protects game state during collision handling
+    \item \texttt{render\_lock}: Ensures thread-safe rendering operations
+\end{itemize}
+
+\subsection{Frame-Based Simulation}
+
+The game updates at a configurable frame rate (default 60 FPS):
+
+\begin{equation}
+\Delta t = \frac{1}{\texttt{fps}} = \frac{1}{60} \approx 0.0167 \text{ seconds}
+\end{equation}
+
+Each frame updates:
+\begin{enumerate}
+    \item Physics simulation (\texttt{space.step(time\_delta)})
+    \item Fruit positions from physics bodies
+    \item Stability status
+    \item Alive/dead state
+    \item Clickability status
+\end{enumerate}
+
+\section{Summary}
+
+The Fruit Merger game implements a sophisticated fruit generation system with:
+
+\begin{itemize}
+    \item \textbf{Adaptive Difficulty:} Progressively unlocks higher fruit types (capped at level 5)
+    \item \textbf{Deterministic Randomness:} PRNG ensures reproducibility for RL training
+    \item \textbf{Physics-Based Gameplay:} Realistic collision and merging mechanics
+    \item \textbf{Balanced Scoring:} Exponentially rewards higher merges
+    \item \textbf{Clear Termination:} Overflow condition provides natural episode boundaries
+\end{itemize}
+
+This design creates a challenging yet learnable environment suitable for deep reinforcement learning research, particularly for testing DQN and MCTS algorithms in continuous physics-based domains.
+
+\end{document}

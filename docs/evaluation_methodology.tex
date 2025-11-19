@@ -1,0 +1,413 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\title{Model Evaluation Methodology for Fruit Merger Game}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+This document describes the comprehensive evaluation methodology used to assess and compare different AI agents (DQN, MCTS variants, and Random baseline) on the Fruit Merger game. The evaluation framework ensures fair, reproducible, and statistically meaningful comparisons.
+
+\section{Evaluation Framework Overview}
+
+\subsection{Evaluation Metrics}
+
+We employ multiple metrics to comprehensively assess agent performance:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lp{9cm}@{}}
+\toprule
+\textbf{Metric} & \textbf{Description} \\
+\midrule
+Score & Final game score (primary metric) \\
+Reward & Cumulative reward obtained during the episode \\
+Steps & Number of actions taken before game termination \\
+Average Time & Mean computation time per action (seconds) \\
+Total Time & Total wall-clock time for the episode \\
+\bottomrule
+\end{tabular}
+\caption{Performance metrics for agent evaluation}
+\end{table}
+
+\subsection{Statistical Measures}
+
+For each metric, we compute:
+
+\begin{itemize}
+    \item \textbf{Mean} ($\mu$): Average performance across all episodes
+    \item \textbf{Maximum} (max): Best performance achieved
+    \item \textbf{Minimum} (min): Worst performance observed
+    \item \textbf{Standard Deviation} ($\sigma$): Measure of performance variance
+    \item \textbf{Median}: 50th percentile value (robust to outliers)
+\end{itemize}
+
+\section{Testing Protocols}
+
+\subsection{Standard Evaluation Protocol}
+
+\begin{algorithm}[H]
+\caption{Standard Agent Evaluation}
+\begin{algorithmic}[1]
+\STATE \textbf{Input:} Agent $A$, Environment $E$, Number of episodes $N$
+\STATE \textbf{Output:} Performance statistics
+\STATE Initialize arrays: $scores \gets [], rewards \gets [], steps \gets []$
+\FOR{$i = 1$ to $N$}
+    \STATE $seed \gets i$ \hfill \COMMENT{Deterministic seeding}
+    \STATE Reset environment: $E.\text{reset}(seed)$
+    \STATE $step\_count \gets 0$, $reward\_sum \gets 0$
+    \STATE $action \gets \text{random\_action}()$ \hfill \COMMENT{Random first action}
+    \STATE $feature, \_, alive \gets E.\text{next}(action)$
+    \WHILE{$alive$}
+        \STATE $step\_count \gets step\_count + 1$
+        \STATE $action \gets A.\text{predict}(feature)$ or $A.\text{predict}(E)$
+        \STATE $feature, reward, alive \gets E.\text{next}(action)$
+        \STATE $reward\_sum \gets reward\_sum + \text{sum}(reward)$
+    \ENDWHILE
+    \STATE Append $(E.\text{score}, reward\_sum, step\_count)$ to arrays
+\ENDFOR
+\RETURN Compute statistics from arrays
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Seed Management}
+
+\textbf{Reproducibility Strategy:}
+\begin{itemize}
+    \item Each episode uses a deterministic seed: $seed_i = i$ for $i \in \{1, 2, \ldots, N\}$
+    \item Alternative: Use PRNG with fixed master seed (e.g., "RedContritio")
+    \item Same seed guarantees identical fruit sequence across different agents
+\end{itemize}
+
+This ensures that different agents are tested on \textbf{identical scenarios}, enabling fair head-to-head comparison.
+
+\subsection{Sample Size Selection}
+
+Recommended number of evaluation episodes:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Purpose} & \textbf{Episodes} & \textbf{Use Case} \\
+\midrule
+Quick Test & 10-20 & Debugging, sanity check \\
+Standard Evaluation & 100 & Default benchmark \\
+Comprehensive Analysis & 200+ & Publication-quality results \\
+Statistical Significance & 500+ & Hypothesis testing \\
+\bottomrule
+\end{tabular}
+\caption{Recommended sample sizes for different evaluation purposes}
+\end{table}
+
+\section{Agent Comparison Methodology}
+
+\subsection{Pairwise Comparison}
+
+When comparing two agents $A_1$ and $A_2$:
+
+\begin{enumerate}
+    \item Run both agents on identical seed sets: $S = \{seed_1, seed_2, \ldots, seed_N\}$
+    \item Compute performance improvement:
+    \begin{equation}
+    \Delta_{score} = \frac{\mu_{A_1} - \mu_{A_2}}{\mu_{A_2}} \times 100\%
+    \end{equation}
+    \item Calculate win rate:
+    \begin{equation}
+    W(A_1, A_2) = \frac{1}{N} \sum_{i=1}^{N} \mathbb{1}[score_{A_1,i} > score_{A_2,i}]
+    \end{equation}
+    \item Measure computational cost ratio:
+    \begin{equation}
+    R_{time} = \frac{\text{avg\_time}_{A_1}}{\text{avg\_time}_{A_2}}
+    \end{equation}
+\end{enumerate}
+
+\subsection{Multi-Agent Comparison}
+
+For comparing $k$ agents $\{A_1, A_2, \ldots, A_k\}$:
+
+\begin{algorithm}[H]
+\caption{Multi-Agent Benchmarking}
+\begin{algorithmic}[1]
+\STATE \textbf{Input:} Agents $\{A_1, \ldots, A_k\}$, Seeds $S$
+\STATE Initialize results matrix $R \in \mathbb{R}^{k \times |S|}$
+\FOR{each agent $A_i$}
+    \FOR{each seed $s_j \in S$}
+        \STATE $R[i, j] \gets \text{evaluate}(A_i, s_j)$
+    \ENDFOR
+\ENDFOR
+\STATE Compute statistics for each agent across seeds
+\STATE Rank agents by mean score
+\STATE Perform pairwise statistical tests (e.g., Mann-Whitney U)
+\RETURN Rankings and statistical significance results
+\end{algorithmic}
+\end{algorithm}
+
+\section{Existing Evaluation Scripts}
+
+\subsection{DQN vs Random Baseline}
+
+\textbf{Script:} \texttt{evaluate.py} and \texttt{evaluate\_multi\_games.py}
+
+\textbf{Features:}
+\begin{itemize}
+    \item Evaluates DQN agent vs. random baseline
+    \item 100-200 episodes per agent
+    \item Outputs: mean, max, min scores and rewards
+    \item Score distribution histogram
+    \item Head-to-head win rate
+    \item Saves detailed results to \texttt{evaluation\_results.txt}
+\end{itemize}
+
+\textbf{Usage:}
+\begin{verbatim}
+python evaluate_multi_games.py
+\end{verbatim}
+
+\subsection{MCTS Variants Comparison}
+
+\textbf{Script:} \texttt{scripts/compare\_mcts\_versions.py}
+
+\textbf{Features:}
+\begin{itemize}
+    \item Compares FastMCTS vs. SmartMCTS
+    \item Configurable simulation count per action
+    \item Measures both performance and computational cost
+    \item Per-game breakdown with seed tracking
+    \item Statistical summary and win/loss record
+\end{itemize}
+
+\textbf{Usage:}
+\begin{verbatim}
+python scripts/compare_mcts_versions.py [num_games] [simulations]
+# Example: 10 games, 200 simulations per step
+python scripts/compare_mcts_versions.py 10 200
+\end{verbatim}
+
+\subsection{Individual MCTS Execution}
+
+\textbf{Scripts:} \texttt{scripts/run\_mcts.py}, \texttt{scripts/run\_fast\_mcts.py}
+
+\textbf{Features:}
+\begin{itemize}
+    \item Run single MCTS agent for testing
+    \item Configurable number of simulations
+    \item Useful for parameter tuning
+\end{itemize}
+
+\section{Performance Analysis Methods}
+
+\subsection{Score Distribution Analysis}
+
+Score distributions are binned into ranges to analyze performance patterns:
+
+\begin{verbatim}
+Bins: [0-100, 100-150, 150-200, 200-250, 250-300, 300-400, 400+]
+\end{verbatim}
+
+This reveals whether an agent:
+\begin{itemize}
+    \item Consistently achieves minimum competency (>100)
+    \item Occasionally produces high scores (>300)
+    \item Has high variance or stable performance
+\end{itemize}
+
+\subsection{Computational Efficiency}
+
+For practical deployment, we evaluate:
+
+\begin{equation}
+\text{Efficiency Score} = \frac{\text{Average Score}}{\text{Average Time per Step}}
+\end{equation}
+
+This balances performance quality with computational cost, critical for:
+\begin{itemize}
+    \item Real-time gameplay requirements
+    \item Resource-constrained environments
+    \item Scalability considerations
+\end{itemize}
+
+\section{Recommended Evaluation Workflow}
+
+\subsection{For Comparing New DQN Models}
+
+\begin{enumerate}
+    \item Train model and save weights to \texttt{.pdparams} file
+    \item Modify \texttt{evaluate\_multi\_games.py} to load your model
+    \item Run evaluation with 100+ episodes
+    \item Compare against baseline (\texttt{final.pdparams}) and random agent
+    \item Document: training hyperparameters, episodes, and convergence
+\end{enumerate}
+
+\subsection{For Comparing MCTS Variants}
+
+\begin{enumerate}
+    \item Implement agent class with \texttt{predict(env)} method
+    \item Add agent to \texttt{compare\_mcts\_versions.py}
+    \item Test with varying simulation counts: [50, 100, 200, 500]
+    \item Plot performance vs. computational cost trade-off
+    \item Identify optimal simulation count for your use case
+\end{enumerate}
+
+\subsection{For Cross-Method Comparison (DQN vs MCTS)}
+
+\begin{enumerate}
+    \item Create unified evaluation script (see Section \ref{sec:unified})
+    \item Use identical seed sets (recommend 200+ episodes)
+    \item Normalize metrics for fair comparison:
+    \begin{itemize}
+        \item Scores: relative to random baseline
+        \item Time: wall-clock time per episode
+    \end{itemize}
+    \item Report both mean and median (median more robust)
+    \item Include confidence intervals or standard errors
+\end{enumerate}
+
+\section{Unified Evaluation Script}
+\label{sec:unified}
+
+We provide a unified script \texttt{benchmark\_all.py} that evaluates all agents:
+
+\begin{itemize}
+    \item DQN (loaded from \texttt{final.pdparams})
+    \item MCTS (basic, optimized, advanced variants)
+    \item Random baseline
+\end{itemize}
+
+\textbf{Key Features:}
+\begin{itemize}
+    \item Single command execution
+    \item Parallel testing on identical seeds
+    \item Comprehensive statistical comparison
+    \item LaTeX-ready table output
+    \item CSV export for further analysis
+\end{itemize}
+
+\subsection{Output Format}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+\textbf{Agent} & \textbf{Mean Score} & \textbf{Std Dev} & \textbf{Max} & \textbf{Win Rate} & \textbf{Time/Step} \\
+\midrule
+DQN & 245.3 $\pm$ 42.1 & 42.1 & 368 & 75\% & 0.012s \\
+Smart MCTS & 223.7 $\pm$ 38.5 & 38.5 & 319 & 62\% & 0.245s \\
+Fast MCTS & 201.2 $\pm$ 35.2 & 35.2 & 287 & 48\% & 0.089s \\
+Random & 145.8 $\pm$ 28.7 & 28.7 & 203 & 0\% & 0.001s \\
+\bottomrule
+\end{tabular}
+\caption{Example benchmark results (200 episodes, seed 0-199)}
+\end{table}
+
+\section{Statistical Significance Testing}
+
+\subsection{Hypothesis Testing}
+
+When claiming one agent is better than another, perform:
+
+\textbf{Mann-Whitney U Test} (non-parametric, no normality assumption):
+
+\begin{equation}
+H_0: \text{median}(A_1) = \text{median}(A_2)
+\end{equation}
+\begin{equation}
+H_1: \text{median}(A_1) > \text{median}(A_2)
+\end{equation}
+
+Report p-value and significance level ($\alpha = 0.05$ standard).
+
+\subsection{Effect Size}
+
+Beyond statistical significance, report practical significance:
+
+\textbf{Cohen's d:}
+\begin{equation}
+d = \frac{\mu_1 - \mu_2}{\sqrt{\frac{\sigma_1^2 + \sigma_2^2}{2}}}
+\end{equation}
+
+Interpretation:
+\begin{itemize}
+    \item $|d| < 0.2$: Negligible effect
+    \item $0.2 \leq |d| < 0.5$: Small effect
+    \item $0.5 \leq |d| < 0.8$: Medium effect
+    \item $|d| \geq 0.8$: Large effect
+\end{itemize}
+
+\section{Reporting Guidelines}
+
+\subsection{Minimum Reporting Requirements}
+
+For any evaluation, report:
+
+\begin{enumerate}
+    \item Agent configuration (hyperparameters, model architecture)
+    \item Number of evaluation episodes
+    \item Seed range or PRNG configuration
+    \item Mean and standard deviation of scores
+    \item Maximum and minimum scores
+    \item Comparison baseline (random or previous best)
+    \item Computational resources (time per step/episode)
+\end{enumerate}
+
+\subsection{Reproducibility Checklist}
+
+\begin{itemize}
+    \item[$\square$] Random seeds documented
+    \item[$\square$] Model weights saved and versioned
+    \item[$\square$] Evaluation script committed to repository
+    \item[$\square$] Python environment specified (requirements.txt)
+    \item[$\square$] Full results data saved (not just summary statistics)
+\end{itemize}
+
+\section{Best Practices}
+
+\begin{enumerate}
+    \item \textbf{Always use the same seed set} for comparing different agents
+    \item \textbf{Run multiple evaluations} to verify stability
+    \item \textbf{Report both mean and median} (median more robust to outliers)
+    \item \textbf{Include error bars} in plots (e.g., 95\% confidence intervals)
+    \item \textbf{Save raw data}, not just summary statistics
+    \item \textbf{Version control your evaluation scripts}
+    \item \textbf{Document any deviations} from standard protocol
+\end{enumerate}
+
+\section{Common Pitfalls to Avoid}
+
+\begin{itemize}
+    \item \textbf{Cherry-picking seeds:} Always report results on pre-specified seed sets
+    \item \textbf{Insufficient sample size:} <50 episodes rarely sufficient for significance
+    \item \textbf{Ignoring variance:} High variance may indicate unstable policy
+    \item \textbf{Unfair comparisons:} Ensure computational budgets are comparable
+    \item \textbf{P-hacking:} Don't repeatedly test until finding significant result
+\end{itemize}
+
+\section{Summary}
+
+This evaluation methodology provides:
+
+\begin{itemize}
+    \item \textbf{Fairness:} Identical seeds ensure comparable scenarios
+    \item \textbf{Reproducibility:} Deterministic protocols enable replication
+    \item \textbf{Comprehensiveness:} Multiple metrics capture different aspects
+    \item \textbf{Statistical rigor:} Proper testing and effect size reporting
+    \item \textbf{Practical utility:} Computational cost considerations
+\end{itemize}
+
+Following this methodology ensures that model comparisons are scientifically sound and results are trustworthy for publication or deployment decisions.
+
+\end{document}

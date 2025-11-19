@@ -3,7 +3,7 @@
 """
 import os
 import numpy as np
-from DQN import Agent, build_model, ReplayMemory, run_episode, compare_with_random
+from DQN import Agent, build_model, ReplayMemory, run_episode, compare_with_random, set_global_seed
 from GameInterface import GameInterface
 
 # 减少训练规模，加速训练
@@ -22,6 +22,10 @@ def quick_train():
     print("=" * 60)
     print("🎮 快速训练DQN水果合成AI")
     print("=" * 60)
+
+    # 设置全局随机种子，确保训练可重复
+    TRAINING_SEED = 42
+    set_global_seed(TRAINING_SEED)
 
     # 初始化环境
     feature_map_height = GameInterface.FEATURE_MAP_HEIGHT

@@ -11,6 +11,19 @@ import paddle
 from GameInterface import GameInterface
 from PRNG import PRNG
 
+# 全局种子设置函数，确保训练可重复性
+def set_global_seed(seed):
+    """
+    设置所有随机数生成器的种子，确保训练结果可重复
+
+    Args:
+        seed: 随机种子值
+    """
+    random.seed(seed)
+    np.random.seed(seed)
+    paddle.seed(seed)
+    print(f"Global seed set to {seed} for reproducibility")
+
 WEIGHT_DIR = "weights"
 OUTPUT_DIR = "output"
 
@@ -276,6 +289,10 @@ def compare_with_random(env: GameInterface, agent: Agent, action_count: int) -> 
 
 
 if __name__ == "__main__":
+    # 设置全局随机种子，确保训练可重复
+    TRAINING_SEED = 42
+    set_global_seed(TRAINING_SEED)
+
     feature_map_height = GameInterface.FEATURE_MAP_HEIGHT
     feature_map_width = GameInterface.FEATURE_MAP_WIDTH
 
