@@ -150,3 +150,40 @@ screenshot.png
 
 # Temporary files
 CLAUDE.md
+
+# ==================================
+# Deep Learning & Training Files
+# ==================================
+# PyTorch models
+*.pth
+*.pt
+*.ckpt
+
+# Video recordings
+videos/
+*.mp4
+*.avi
+
+# Training logs
+logs/
+*.log
+tensorboard.log
+train.log
+
+# Training metrics and results
+training_metrics*.json
+evaluation_results.json
+*.csv
+
+# Large data files
+*.tar.gz
+*.zip
+*.pkl
+*.pickle
+
+# R history
+.Rhistory
+*.Rhistory
+
+# AutoDL / Cloud specific
+test_env.py

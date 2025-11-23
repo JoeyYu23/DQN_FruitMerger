@@ -3,10 +3,14 @@ Test script for MCTS Agent
 Runs the MCTS agent on the Suika game and evaluates performance.
 """
 
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import time
 import numpy as np
 from GameInterface import GameInterface
-from MCTS import MCTSAgent, MCTSConfig
+from mcts.MCTS import MCTSAgent, MCTSConfig
 from typing import List, Tuple
 
 

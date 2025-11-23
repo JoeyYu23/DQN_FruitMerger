@@ -1,0 +1,41 @@
+# ========================================
+# DQN FruitMerger - 云服务器依赖配置
+# ========================================
+# 服务器环境:
+#   - GPU: RTX 3080 Ti (12GB)
+#   - CUDA: 11.8
+#   - Python: 3.10
+#   - 系统: Ubuntu 22.04
+# ========================================
+
+# 深度学习框架 (PyTorch 2.1.2 for CUDA 11.8)
+# 安装命令: pip install torch==2.1.2 torchvision==0.16.2 --index-url https://download.pytorch.org/whl/cu118
+torch==2.1.2
+torchvision==0.16.2
+
+# 游戏引擎
+pymunk>=6.2.0
+
+# 图形界面
+pygame>=2.1.0
+
+# 计算机视觉
+opencv-python>=4.5.0
+
+# 数值计算
+numpy>=1.21.0,<2.0.0
+
+# 进度条
+tqdm>=4.62.0
+
+# 训练监控 (可选)
+tensorboard>=2.10.0
+
+# 数据可视化 (可选)
+matplotlib>=3.5.0
+
+# 注意事项:
+# 1. PyTorch需要单独安装,使用上面注释中的命令
+# 2. 如果使用PaddlePaddle版本,请使用 requirements_alphazero.txt
+# 3. 确保CUDA 11.8已正确安装在系统中
+# 4. RTX 3080 Ti (12GB) 显存足够训练,可以使用较大的batch_size

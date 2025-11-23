@@ -203,7 +203,7 @@ def run_episode(
         action = agent.sample(feature)
         next_feature, reward, alive = env.next(action)
 
-        reward = reward if alive else -1000
+        # 奖励已在GameInterface中计算完成，不需要额外的死亡惩罚
 
         memory.append((feature, action, reward, next_feature, alive))
 

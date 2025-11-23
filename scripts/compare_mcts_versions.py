@@ -3,11 +3,15 @@
 对比普通MCTS vs 智能MCTS的表现
 """
 
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import numpy as np
 import time
 from GameInterface import GameInterface
-from MCTS_optimized import FastMCTSAgent
-from MCTS_advanced import SmartMCTSAgent
+from mcts.MCTS_optimized import FastMCTSAgent
+from mcts.MCTS_advanced import SmartMCTSAgent
 
 
 def play_game(agent, env, seed, agent_name="Agent"):

@@ -14,7 +14,7 @@ import numpy as np
 import math
 import random
 from typing import List, Dict, Optional, Tuple
-from MCTS_optimized import FastConfig, FastGameState, FastNode, FastMCTS, FastMCTSAgent
+from mcts.MCTS_optimized import FastConfig, FastGameState, FastNode, FastMCTS, FastMCTSAgent
 
 
 # =====================
