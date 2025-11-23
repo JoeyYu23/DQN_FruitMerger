@@ -1,0 +1,17 @@
+# AlphaZero Requirements
+# Python 3.8+
+
+# 核心依赖
+paddlepaddle>=2.4.0  # 或 paddlepaddle-gpu 如果有GPU
+numpy>=1.20.0
+opencv-python>=4.5.0
+
+# Physics engine
+pymunk>=6.2.0
+
+# 可选：可视化和监控
+matplotlib>=3.3.0
+tqdm>=4.60.0
+
+# 工具
+psutil>=5.8.0  # 监控资源
