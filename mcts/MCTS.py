@@ -73,7 +73,7 @@ class SimplifiedGameState:
 
         # Game state
         self.current_fruit = 1  # Type of next fruit to drop
-        self.score = 0
+        self.score = int(0)  # Use Python int to avoid overflow
         self.is_terminal = False
         self.max_height = 0  # Highest occupied row
 
@@ -85,7 +85,7 @@ class SimplifiedGameState:
         new_state = SimplifiedGameState(self.width, self.height)
         new_state.grid = self.grid.copy()
         new_state.current_fruit = self.current_fruit
-        new_state.score = self.score
+        new_state.score = int(self.score)  # Ensure int type
         new_state.is_terminal = self.is_terminal
         new_state.max_height = self.max_height
         return new_state
@@ -207,7 +207,7 @@ class SimplifiedGameState:
                             reward = new_type
 
                         total_reward += reward
-                        self.score += reward
+                        self.score = int(self.score) + int(reward)  # Prevent overflow
                         changed = True
                         break
 
