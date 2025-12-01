@@ -45,6 +45,8 @@ EVALUATE_TIMES = 25
 evaluate_random = PRNG()
 evaluate_random.seed("RedContritio")
 
+REWARD_MODE = 1  # 1, 2, or 3
+
 
 class ReplayMemory(collections.deque):
     def __init__(self, max_size: int = MEMORY_SIZE) -> None:
@@ -301,7 +303,8 @@ if __name__ == "__main__":
     e_greed = 0.5
     e_greed_decrement = 1e-6
 
-    env = GameInterface()
+    env = GameInterface(reward_mode=REWARD_MODE)
+
 
     memory = ReplayMemory(MEMORY_SIZE)
 

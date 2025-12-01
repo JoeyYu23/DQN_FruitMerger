@@ -12,12 +12,15 @@ class GameInterface:
 
     FEATURE_MAP_WIDTH, FEATURE_MAP_HEIGHT = 16, 20
 
-    def __init__(self) -> None:
+    def __init__(self, reward_mode: int = 1) -> None:
         self.game = GameCore()
         self.action_num = GameInterface.ACTION_NUM
         self.action_segment_len = self.game.width / GameInterface.ACTION_NUM
         self.consecutive_merges = 0  # 追踪连续合成次数
         self.prev_fruit_count = 0  # 记录上一步的水果数量
+
+        # NEW: reward mode selector (1, 2, or 3)
+        self.reward_mode = reward_mode
 
     def reset(self, seed: int = None) -> None:
         self.game.reset(seed)
@@ -105,6 +108,52 @@ class GameInterface:
             reward += combo_bonus
 
         return reward
+    
+    def calculate_reward_mode2(self,
+                               score_delta: int,
+                               current_fruit: int,
+                               alive: bool,
+                               prev_score: int) -> float:
+        """
+        奖励模式 2（占位示例）：
+        - 目前先作为简单版本，你可以在这里随意修改公式
+        """
+        reward = 0.0
+
+        # 示例：只用分数变化 + 终局惩罚
+        reward += float(score_delta)
+
+        if not alive:
+            # 可以调整这个系数
+            reward -= 200.0
+
+        return reward
+
+    def calculate_reward_mode3(self,
+                               score_delta: int,
+                               current_fruit: int,
+                               alive: bool,
+                               prev_score: int) -> float:
+        """
+        奖励模式 3（占位示例）：
+        - 再给你一个独立的配方，方便单独调参
+        """
+        reward = 0.0
+
+        # 示例：只在有合成的时候给奖励
+        if score_delta > 0:
+            reward += float(score_delta)
+
+        # 也可以加上空间/高度惩罚：
+        space_utilization = self.calculate_space_utilization()
+        height_ratio = self.calculate_max_height_ratio()
+        reward -= space_utilization * 5.0
+        reward -= height_ratio * 5.0
+
+        if not alive:
+            reward -= 300.0
+
+        return reward
 
     def next(self, action: int) -> typing.Tuple[np.ndarray, int, bool]:
         current_fruit = self.game.current_fruit_type
@@ -122,10 +171,24 @@ class GameInterface:
         score_delta = score_2 - score_1
         alive = self.game.alive
 
-        # 使用新的综合奖励函数
-        reward = self.calculate_comprehensive_reward(
-            score_delta, current_fruit, alive, score_1
-        )
+        # 根据 reward_mode 选择不同的奖励函数
+        if self.reward_mode == 1:
+            reward = self.calculate_comprehensive_reward(
+                score_delta, current_fruit, alive, score_1
+            )
+        elif self.reward_mode == 2:
+            reward = self.calculate_reward_mode2(
+                score_delta, current_fruit, alive, score_1
+            )
+        elif self.reward_mode == 3:
+            reward = self.calculate_reward_mode3(
+                score_delta, current_fruit, alive, score_1
+            )
+        else:
+            # fallback：非法值时默认用模式 1
+            reward = self.calculate_comprehensive_reward(
+                score_delta, current_fruit, alive, score_1
+            )
 
         flatten_feature = feature.flatten().astype(np.float32)
         # flatten_feature = np.expand_dims(feature.flatten(), axis=0).astype(np.float32)

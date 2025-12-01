@@ -9,6 +9,9 @@ from PRNG import PRNG
 evaluate_random = PRNG()
 evaluate_random.seed("RedContritio")
 
+EVAL_REWARD_MODE = 1  # 或 2 / 3
+
+
 if __name__ == "__main__":
     EVALUATE_TIMES = 200
 
@@ -20,7 +23,8 @@ if __name__ == "__main__":
     e_greed = 0.5
     e_greed_decrement = 1e-6
 
-    env = GameInterface()
+    env = GameInterface(reward_mode=EVAL_REWARD_MODE)
+
 
     agent = Agent(build_model, feature_dim, action_dim, e_greed, e_greed_decrement)
 
