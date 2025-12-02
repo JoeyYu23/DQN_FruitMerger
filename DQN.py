@@ -194,7 +194,7 @@ def run_episode(
         action = agent.sample(feature)
         next_feature, reward, alive = env.next(action)
 
-        reward = reward if alive else -1000
+        # reward = reward if alive else -1000
 
         memory.append((feature, action, reward, next_feature, alive))
 
@@ -283,13 +283,14 @@ def compare_with_random(env: GameInterface, agent: Agent, action_count: int) -> 
 if __name__ == "__main__":
     feature_map_height = GameInterface.FEATURE_MAP_HEIGHT
     feature_map_width = GameInterface.FEATURE_MAP_WIDTH
+    REWARD_MODE = 2  # 1, 2, or 3
 
     action_dim = GameInterface.ACTION_NUM
     feature_dim = feature_map_height * feature_map_width * 2
     e_greed = 0.5
     e_greed_decrement = 1e-6
 
-    env = GameInterface()
+    env = GameInterface(reward_mode=REWARD_MODE)
     memory = ReplayMemory(MEMORY_SIZE)
     agent = Agent(build_model, feature_dim, action_dim, e_greed, e_greed_decrement)
 
