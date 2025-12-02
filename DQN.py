@@ -27,7 +27,7 @@ def set_global_seed(seed):
 WEIGHT_DIR = "weights"
 OUTPUT_DIR = "output"
 
-FINAL_PARAM_PATH = "final.pdparams"
+FINAL_PARAM_PATH = "reward1.pdparams"
 
 for d in [WEIGHT_DIR, OUTPUT_DIR]:
     if not os.path.exists(d):

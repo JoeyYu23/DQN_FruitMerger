@@ -115,17 +115,11 @@ class GameInterface:
                                alive: bool,
                                prev_score: int) -> float:
         """
-        奖励模式 2（占位示例）：
-        - 目前先作为简单版本，你可以在这里随意修改公式
+        奖励模式 2 组成部分：
+        只用分数变化 + 终局惩罚
         """
         reward = 0.0
-
-        # 示例：只用分数变化 + 终局惩罚
         reward += float(score_delta)
-
-        if not alive:
-            # 可以调整这个系数
-            reward -= 200.0
 
         return reward
 
@@ -136,23 +130,48 @@ class GameInterface:
                                prev_score: int) -> float:
         """
         奖励模式 3（占位示例）：
-        - 再给你一个独立的配方，方便单独调参
+        组成部分：
+        1. 合成奖励：指数增长 (2^fruit_type)
+        2. 空间惩罚：-填充率 × 10
+        3. 高度惩罚：-最高位置比例 × 5
+        4. 连续合成奖励：combo × 3
         """
         reward = 0.0
 
-        # 示例：只在有合成的时候给奖励
+        # 1. 合成奖励（指数增长）
         if score_delta > 0:
-            reward += float(score_delta)
+            # score_delta就是新合成水果的type值（或100）
+            if score_delta >= 100:
+                merge_reward = 2 ** 11  # 最大水果
+            else:
+                merge_reward = 2 ** score_delta
+            reward += merge_reward
 
-        # 也可以加上空间/高度惩罚：
+            # 更新连续合成计数
+            self.consecutive_merges += 1
+        else:
+            # 没有合成，重置连续合成计数
+            self.consecutive_merges = 0
+
+            # 5. 无效操作惩罚（增强版）
+            invalid_penalty = -current_fruit * 3
+            reward += invalid_penalty
+
+        # 2. 空间惩罚
         space_utilization = self.calculate_space_utilization()
+        space_penalty = -space_utilization * 10
+        reward += space_penalty
+
+        # 3. 高度惩罚
         height_ratio = self.calculate_max_height_ratio()
-        reward -= space_utilization * 5.0
-        reward -= height_ratio * 5.0
+        height_penalty = -height_ratio * 5
+        reward += height_penalty
 
-        if not alive:
-            reward -= 300.0
-
+        # 4. 连续合成奖励
+        if self.consecutive_merges > 1:
+            combo_bonus = (self.consecutive_merges - 1) * 3
+            reward += combo_bonus
+        
         return reward
 
     def next(self, action: int) -> typing.Tuple[np.ndarray, int, bool]:
