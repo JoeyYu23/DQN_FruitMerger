@@ -25,7 +25,7 @@ import hashlib
 class MCTSConfig:
     """Configuration for MCTS search"""
     # Grid dimensions (compressed representation)
-    GRID_WIDTH = 10
+    GRID_WIDTH = 16  # 修改为16，与网络动作数一致
     GRID_HEIGHT = 16
 
     # Action space (discretized X positions)
@@ -150,6 +150,59 @@ class SimplifiedGameState:
             self.current_fruit = random.randint(1, min(5, 10))
 
         return reward
+
+    def simulate_lookahead(self, num_steps: int = 10, policy: str = "greedy") -> float:
+        """
+        Simulate next N fruit placements and return total score gained.
+
+        Args:
+            num_steps: Number of fruits to simulate (default 10)
+            policy: "greedy" (choose best valid action) or "random"
+
+        Returns:
+            Total score gained from lookahead simulation
+        """
+        # Create a deep copy to avoid modifying current state
+        sim_state = self.copy()
+        initial_score = sim_state.score
+
+        for _ in range(num_steps):
+            # Get valid actions
+            valid_actions = sim_state.get_valid_actions()
+
+            if len(valid_actions) == 0:
+                # Game over, stop simulation
+                break
+
+            # Select action based on policy
+            if policy == "greedy":
+                # Greedy: try each action and pick the one with highest immediate reward
+                best_action = valid_actions[0]
+                best_reward = -float('inf')
+
+                for action in valid_actions:
+                    # Try this action on a temporary copy
+                    temp_state = sim_state.copy()
+                    reward = temp_state.apply_action(action)
+
+                    if reward > best_reward:
+                        best_reward = reward
+                        best_action = action
+
+                action = best_action
+            else:
+                # Random policy
+                action = random.choice(valid_actions)
+
+            # Apply the chosen action
+            sim_state.apply_action(action)
+
+            # Check if game ended
+            if sim_state.is_terminal:
+                break
+
+        # Return total score gained during lookahead
+        return float(sim_state.score - initial_score)
 
     def _process_merges(self, start_row: int, start_col: int) -> float:
         """
@@ -436,10 +489,10 @@ class HeuristicPolicy:
         fruit_type = state.current_fruit
 
         # 1. Center bias (prefer middle columns)
-        center = state.width / 2
-        center_distance = abs(col - center)
-        center_score = 1.0 - (center_distance / center)
-        score += 2.0 * center_score
+        # center = state.width / 2
+        # center_distance = abs(col - center)
+        # center_score = 1.0 - (center_distance / center)
+        # score += 2.0 * center_score
 
         # 2. Merge potential (check neighbors)
         # Find where fruit would land

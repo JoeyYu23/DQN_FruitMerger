@@ -1,0 +1,50 @@
+{
+  "Optimized MCTS": {
+    "mean": 255,
+    "std": 60,
+    "max": 350,
+    "min": 180,
+    "speed": 0.17,
+    "training_cost": "None"
+  },
+  "CNN-DQN": {
+    "mean": 196.6,
+    "std": 53.7,
+    "max": 345,
+    "min": 93,
+    "speed": 0.01,
+    "training_cost": "1500 episodes"
+  },
+  "DQN": {
+    "mean": 183.9,
+    "std": 66.4,
+    "max": 325,
+    "min": 91,
+    "speed": 0.01,
+    "training_cost": "5000 episodes"
+  },
+  "Smart MCTS": {
+    "mean": 177.3,
+    "std": 26,
+    "max": 197,
+    "min": 141,
+    "speed": 0.43,
+    "training_cost": "None"
+  },
+  "Random": {
+    "mean": 133.5,
+    "std": 40.3,
+    "max": 243,
+    "min": 55,
+    "speed": 0.001,
+    "training_cost": "None"
+  },
+  "AlphaZero (old)": {
+    "mean": 96.8,
+    "std": 9.3,
+    "max": 109,
+    "min": 84.8,
+    "speed": 1.0,
+    "training_cost": "7 iterations"
+  }
+}
