@@ -100,18 +100,12 @@ from GameInterface import GameInterface
 
 ## 3️⃣ **MCTS (Real Physics)**
 
-### Core Files (Main Directory)
+### Core Files
 | File | Size | Description |
 |------|------|-------------|
-| `mcts/MCTS_real_physics.py` | 21K | **Recommended** - Real physics MCTS |
-| `mcts/MCTS_optimized.py` | 11K | Optimized MCTS (simplified physics) |
-| `mcts/MCTS_tuned.py` | 16K | Tuned MCTS |
-| `mcts/MCTS_advanced.py` | 17K | Advanced MCTS (heuristics) |
-| `mcts/MCTS.py` | 24K | Basic MCTS (correct merge but slow) |
-
-### Test Files
-- `test_real_physics_mcts.py` (5.8K) - Real Physics MCTS testing
-- `evaluate_mcts_real_physics.py` (3.9K) - MCTS evaluation
+| `mcts/MCTS_real_physics.py` | 21K | **Main file** - Real physics MCTS implementation |
+| `test_real_physics_mcts.py` | 5.8K | Testing and comparison script |
+| `evaluate_mcts_real_physics.py` | 3.9K | MCTS evaluation script |
 
 ### Dependencies
 ```python
@@ -123,16 +117,10 @@ from GameInterface import GameInterface
 ### Features
 - **No Training Required**: Pure search algorithm
 - **Uses Real Physics Engine**: Complete pymunk simulation
-- **Two-Step Lookahead**: Evaluates current + future actions
+- **Two-Step Lookahead**: Evaluates current action + best future action
 - **Smart Rewards**: Merge rewards + position advantages - height penalty
-
-### MCTS Version Comparison
-| Version | Description | Speed | Accuracy |
-|---------|-------------|-------|----------|
-| `MCTS_real_physics.py` | Real physics engine | Medium | ⭐⭐⭐⭐⭐ |
-| `MCTS_optimized.py` | Simplified physics (grid) | Fast | ⭐⭐⭐ |
-| `MCTS.py` | Basic (correct but slow) | Slow | ⭐⭐⭐⭐⭐ |
-| `MCTS_advanced.py` | Heuristic-enhanced | Medium | ⭐⭐⭐⭐ |
+- **Safety Filtering**: Avoids dangerous positions near death line
+- **Merge Priority**: Prioritizes actions that create merges
 
 ---
 
@@ -251,6 +239,7 @@ resources/images/
 Game.py
 GameInterface.py
 GameEvent.py
+PRNG.py
 mcts/MCTS_real_physics.py
 resources/images/
 ```
