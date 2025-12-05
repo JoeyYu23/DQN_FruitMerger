@@ -13,8 +13,10 @@ from torch.utils.data import Dataset, DataLoader
 
 
 
-REPLAY_BUFFER_PATH = "buffer/replay_buffer_final.pt"
-SAVE_MODEL_PATH = "BC/BC_pretrained_policy.pt"
+# REPLAY_BUFFER_PATH = "buffer/replay_buffer_final.pt"
+REPLAY_BUFFER_PATH = "buffer/replay_final_buffer_cnn.pt"
+# SAVE_MODEL_PATH = "BC/BC_pretrained_policy.pt"
+SAVE_MODEL_PATH = "BC/BC_pretrained_policy_cnn.pt"
 
 BATCH_SIZE = 256
 EPOCHS = 20
